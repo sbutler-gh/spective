@@ -1,4 +1,4 @@
-import { c as create_ssr_component } from "../../chunks/index-752377b9.js";
+import { c as create_ssr_component } from "../../chunks/index-f034c715.js";
 var app = "";
 const _layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   return `${slots.default ? slots.default({}) : ``}`;

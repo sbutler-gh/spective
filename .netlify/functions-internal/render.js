@@ -5,11 +5,13 @@ export const handler = init({
 	assets: new Set(["favicon.png","normalize.css","prettify.css","style.css"]),
 	mimeTypes: {".png":"image/png",".css":"text/css"},
 	_: {
-		entry: {"file":"start-b38a33a5.js","js":["start-b38a33a5.js","chunks/index-da32ce4b.js","chunks/index-d19cd493.js"],"css":[]},
+		entry: {"file":"start-abfaedfd.js","js":["start-abfaedfd.js","chunks/index-d36043ac.js","chunks/index-fb66156c.js"],"css":[]},
 		nodes: [
 			() => import('../server/nodes/0.js'),
 			() => import('../server/nodes/1.js'),
-			() => import('../server/nodes/2.js')
+			() => import('../server/nodes/4.js'),
+			() => import('../server/nodes/2.js'),
+			() => import('../server/nodes/3.js')
 		],
 		routes: [
 			{
@@ -38,6 +40,28 @@ export const handler = init({
 				names: [],
 				types: [],
 				load: () => import('../server/entries/endpoints/load_sites.js')
+			},
+			{
+				type: 'page',
+				id: "Earthquakes",
+				pattern: /^\/Earthquakes\/?$/,
+				names: [],
+				types: [],
+				path: "/Earthquakes",
+				shadow: null,
+				a: [0,3],
+				b: [1]
+			},
+			{
+				type: 'page',
+				id: "MiniScroller",
+				pattern: /^\/MiniScroller\/?$/,
+				names: [],
+				types: [],
+				path: "/MiniScroller",
+				shadow: null,
+				a: [0,4],
+				b: [1]
 			}
 		],
 		matchers: async () => {

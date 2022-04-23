@@ -125,4 +125,4 @@ function add_attribute(name, value, boolean) {
   const assignment = boolean && value === true ? "" : `="${escape_attribute_value(value.toString())}"`;
   return ` ${name}${assignment}`;
 }
-export { safe_not_equal as a, createEventDispatcher as b, create_ssr_component as c, add_attribute as d, escape as e, subscribe as f, getContext as g, get_store_value as h, missing_component as m, noop as n, onDestroy as o, setContext as s, validate_component as v };
+export { safe_not_equal as a, subscribe as b, create_ssr_component as c, createEventDispatcher as d, escape as e, add_attribute as f, getContext as g, get_store_value as h, missing_component as m, noop as n, onDestroy as o, setContext as s, validate_component as v };
