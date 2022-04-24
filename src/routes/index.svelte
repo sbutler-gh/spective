@@ -1,46 +1,43 @@
 <script>
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
-  import Earthquakes from './Earthquakes.svelte';
+  import Content from './Content.svelte';
 import { inputs_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
 import { get } from 'svelte/store';
 import { variables } from '$lib/variables';
-
-  export let sites;
-
-  let earthquakes = true;
 
   let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
 
   const { GeolocateControl, NavigationControl } = controls
   const place = null
 
-  // let perspective;
   let content;
 
-  let page = 'about'
-  // let center = { lat: 38.88, lng: -77.1318825263977 }
-  // let marker = center
+
   let center;
   let marker;
   let zoom = 12;
   let mapComponent;
 
+  // create_mode is used to control the status of the page in the add_content workflow.  It isn't a boolean, rather, it is changed to things like "select_location" and "input_content" and "success" to correspond different stages in that workflow.
   let create_mode = false;
-  // let create_mode = "input_content";
-  let create_step;
+
+  // when a user is adding content to the map, and selecting a location to add content, selected_location stores the lat/lng of the user's selection.  this is used to render a marker at the user's selection as they choose, and to submit the selected_location when the content is submitted to the backend.
   let selected_location;
 
+  // This is used to destroy and refresh the <Content > component when new content is available, so the map source and layers are redrawn with the updated/new data.
   let unique = {}
 
+  // On page load
   onMount(async() => {
 
-    console.log(sites);
+    // We geolocate the user's IP address, to initialize the map settings near where they are and center the map on a familiar place.
     ipToCoordinates();
 
   })
 
+  // We take the user's IP, get coordinates from it (an approximate location — usually the data center nearest them), and update the map location to those coordinates.
   async function ipToCoordinates() {
     
     const ip = await fetch("https://serene-journey-42564.herokuapp.com/https://api.ipify.org?format=json&callback=getIP");
@@ -60,107 +57,12 @@ import { variables } from '$lib/variables';
     
     console.log(json);
     
-    // address = `${json.city}, ${json.region}, ${json.country}, ${json.postal}`;
-    // city = json.city;
-    // region = json.region;
-    // postal = json.postal;
-    // country = json.country;
     let coordinates = json.loc.split(',');
     coordinates = {"lat": coordinates[0], "lng": coordinates[1]};
     center = coordinates;
     mapComponent.setCenter({lng: center.lng, lat: center.lat})
     marker = center;
-    // Seattle coordinates for testing
-    // coordinates = {"lat": 47.6083, "lng": -122.335167};
-    //         coordinates = {
-    //     "lat": 37.7790262,
-    //     "lng": -122.419906
-    // }
     }
-
-  function addSites() {
-
-    let new_input =  { "type": "Feature", "properties": { "id": Math.floor(Date.now() / 1000), "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ -77.1318825263977, 38.88, 0.0 ] } }
-    
-    let inputs_array = $inputs_store;
-
-    console.log(inputs_array);
-    
-    inputs_array.push(new_input);
-
-    console.log(inputs_array);
-
-    $inputs_store = inputs_array;
-
-    unique = {};
-
-    // mapComponent.getSource('earthquakes');
-  }
-
-async function publishSite(e) {
-
-console.log(e.detail);
-var formData = new FormData();
-
-// formData.append('name', e.detail.name);
-// formData.append('impact', e.detail.impact);
-formData.append('perspective', Math.floor(Date.now() / 1000));
-formData.append('lng', center.lng);
-formData.append('lat', center.lat);
-formData.append('lng_lat', JSON.stringify(center.lng, center.lat));
-
-
-console.log(formData);
-
-const response = await fetch('/publish_location', {
-method: 'post',
-body: formData
-})
-
-if (response.ok) {
-
-let response_json = await response.json();
-
-    let new_input =  { "type": "Feature", "properties": { "id": response_json[0].id, "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ response_json[0].lng, response_json[0].lat, 0.0 ] } }
-    
-    let inputs_array = $inputs_store;
-
-    console.log(inputs_array);
-    
-    inputs_array.push(new_input);
-
-    console.log(inputs_array);
-
-    $inputs_store = inputs_array;
-
-    unique = {};
-
-    // create_mode = "success";
-
-    // selected_location = null;
-
-// console.log(response_json);
-// console.log(response_json[0].id);
-
-// console.log('test a');
-// console.log('test a');
-// sites.push(response_json[0]);
-// sites = sites;
-
-// // display_notification = true;
-// // menu_display = "plant";
-// display_my_location = false;
-}
-else {
-let response_json = await response.json();
-console.log(response_json);
-console.log(response_json.status);
-console.log(response.body);
-
-create_mode = "error";
-}
-
-}
 
   function navigate (next) {
     page = next
@@ -197,24 +99,33 @@ create_mode = "error";
     marker = detail.center
   }
 
-  function toggleAddPerspective() {
-    // (create_mode == false) ? create_mode = true : create_mode = false;
+  // When a user clicks "Add Content" (or "Cancel"), this function controls the toggle.
+  function toggleAddContent() {
 
+    // We have a slight delay because there are other functions that rely on create_mode, and if we update it too quickly, it results in unexpected behavior.  So we need to update create_mode to what's appropriate after a slight delay.
     setTimeout(function() {
     if (create_mode == false) {
+      
+      // If create_mode is currently false, we'll update it to the next step in the add content workflow — when a user should select a location.
       create_mode = "select_location";
-      // console.log(document.getElementsByClassName('mapboxgl-canvas-container')[0]);
-      document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: crosshair! important;";
 
-      // document.getElementsByClassName('map-wrap')[0].addEventListener('click', clickLocation)
+      // When the user is selecting a location, we'll update the cursor to be a crosshair, to help communicate they should be selecting a place.
+      // mapboxgl-canvas-container ends up being the best (and only working) option to update this.  Trying cursor css settings on other map divs, the cursor doesn't actually appear to be different.
+      document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: crosshair! important;";
     }
+
+    // If create_mode isn't currently false, so the user is currently somewhere in the add content workflow, and we get to this conditional — it's because they clicked "Cancel"
     else {
+      
+      // So we reset create_mode to false
       create_mode = false;
+
+      // And we reset the selected_location, so when the user attempts to add content again, it will start fresh (instead of re-using the location from before they cancelled)
       selected_location = null;
-      // console.log(document.getElementsByClassName('mapboxgl-canvas-container')[0]);
+
+      // And we'll change the cursor back to the default grab.
       document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
 
-      // document.getElementsByClassName('map-wrap')[0].removeEventListener('click', clickLocation);
     }}, 50)
   }
 
@@ -223,35 +134,50 @@ create_mode = "error";
     console.log(e);
   }
 
+  // When create_mode is "select_location" (e.g. cursor is crosshair) and the user clicks on the map, thereby selecting a location for their content, this function is called.
+  // Actually, this function is called anytime the user clicks on the map, because I don't think you can control when a click on the Mapbox component does/doesn't result in a function.
+  // So we handle that discrepancy inside the function.
   function selectLocation( { detail }) {
+
+    // If create_mode is false, that means the user is just browsing the map and is not adding content.  In that case, we don't want to add a marker or update the center or anything when they click.
+    // So we'll only run this function if create_mode is anything but false.  This likewise means, that if a user has selected a location already in the add content workflow and are entering the content, they are still able to click around on the map and update the location.  This seems like a user-friendly behavior from testing.
     if (create_mode != false) {
 
+      // Sometimes a click registers twice in svelte — meaning, the first click will give us (detail), and the second click will give us undefined.
+      // If we tried doing the following when the click was undefined, it wouldn't work
+      // So we specify to only get the location of the user's click and update the marker on the map when we actually have that information from the click (e.g. the first click, not the second undefined one that registers)
       if (detail.lat) {
       console.log(detail);
       console.log(detail.lat);
       selected_location = detail;
       console.log(selected_location);
       
+      // If the map is somewhat zoomed out when the user clicks, we will zoom in on their click.
+      // This is a bit jarring once you're already zoomed in close on the map, so we only have the behavior when the current zoom level is less than 16.
       if (zoom < 16) {
         mapComponent.setCenter({lng: selected_location.lng, lat: selected_location.lat});
         zoom = 16;
       }
 
+      // Finally, if create_mode is not yet in the "input_content" stage yet (when the user has the content text area form available), we will update it to that stage.
       create_mode != "input_content" ? create_mode = "input_content" : null;
       }
     }
   }
 
+  // When the user submits their content, this function pushes it to the backend and renders the updated data on the map.
   async function submitContent(e) {
-    // let formData = new formData(e.target);
 
+    // Getting the data from the form submission, which is only the "content" textarea right now.
     var formData = new FormData(e.target);
 
+    // Adding the location data to the submission.
     formData.append('lng', selected_location.lng);
     formData.append('lat', selected_location.lat);
     formData.append('lng_lat', JSON.stringify(selected_location.lng, selected_location.lat));
 
 
+    // Sending all of this to the publish_location endpoint
   const response = await fetch('/publish_location', {
   method: 'post',
   body: formData
@@ -259,28 +185,35 @@ create_mode = "error";
 
   if (response.ok) {
 
-  let response_json = await response.json();
+    let response_json = await response.json();
 
-      let new_input =  { "type": "Feature", "properties": { "id": response_json[0].id, "content": response_json[0].content, "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ response_json[0].lng, response_json[0].lat, 0.0 ] } }
+      // We format all of the content as Geojson feature points.
+      // So we take the structure of a geojson feature, and insert the id, content, and lat/lng from the data into the feature.
+      let new_input =  { "type": "Feature", "properties": { "id": response_json[0].id, "content": response_json[0].content }, "geometry": { "type": "Point", "coordinates": [ response_json[0].lng, response_json[0].lat, 0.0 ] } }
       
+      // We get the current state of the map data
       let inputs_array = $inputs_store;
-
-      console.log(inputs_array);
       
+      // We add the new piece of content, the user submission that we just submitted to the backend, to the array of map data
       inputs_array.push(new_input);
 
-      console.log(inputs_array);
-
+      // And now we set the current state of the map data to inputs_array, which includes the new submission from the line above
       $inputs_store = inputs_array;
 
+      // The map data is drawn in the Content.svelte component.  But the map data is already drawn, so simply updating $inputs_store (which is the basis for the map data) doesn't do enough — because the drawing hasn't updated.
+      // So we need to destroy the <Content> component, and refresh it.
+      // That way, when <Content> is called again, the map data will be redrawn with the updated data.
       unique = {};
 
+      // After all this, we update create_mode to success to display a success message.
       create_mode = "success";
 
+      // And we return the map to its default settings, including setting the cursor to grab
       document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
-
+      // And resetting selected_location (so the next time user wants to add content, it won't automatically select the same point from this submission)
       selected_location = null;
 
+      // And after several seconds, enough time for the user to see the success message, we'll reset create_mode to false, as the content has been added and the workflow is complete.
       setTimeout(function() {
         create_mode = false;
       }, 3000)
@@ -305,12 +238,13 @@ create_mode = "error";
 
 </script>
 
+<!-- This script runs first, as soon as the page is loaded, before anything in the script tag above -->
+<!-- The very first thing we do is load data from the backend, so we can populate the map with it -->
 <script context="module">
-
-  let sites;
 
   export const load = async ({ fetch }) => {
 
+    // We get the data via the load_sites endpoint
     const res = await fetch('/load_sites',{
       method: 'get'
     });
@@ -320,17 +254,19 @@ create_mode = "error";
       
 			const sites = await res.json();
 
-      let inputs_array = get(inputs_store);
+      let inputs_array = [];
 
+      // For each item of data from the backend
       for (var i=0; i < sites.table.length; i++) {
 
-        let new_input =  { "type": "Feature", "properties": { "id": sites.table[i].id, "content": sites.table[i].content, "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ sites.table[i].lng, sites.table[i].lat, 0.0 ] } }
+        // We convert it into geojson feature format
+        let new_input =  { "type": "Feature", "properties": { "id": sites.table[i].id, "content": sites.table[i].content}, "geometry": { "type": "Point", "coordinates": [ sites.table[i].lng, sites.table[i].lat, 0.0 ] } }
 
+        // And push it to the array
         inputs_array.push(new_input);
       }
 
-      // console.log(inputs_array);
-
+      // And we set the inputs_store to the inputs_array, filled with data from the backend
       inputs_store.set(inputs_array);
 
 			return {
@@ -413,7 +349,7 @@ create_mode = "error";
               <Marker lat={selected_location.lat} lng={selected_location.lng}></Marker>
               {/if}
               {#key unique}
-                <Earthquakes />
+                <Content />
               {/key}
 
                 <!-- <NavigationControl /> -->
@@ -423,7 +359,7 @@ create_mode = "error";
                 <button id="add_content_button" style="position: absolute; bottom: 42%; margin: auto; left: 0; display: block; left: 50%;
                 -webkit-transform: translateX(-50%);
                 -moz-transform: translateX(-50%);
-                transform: translateX(-50%);" on:click|preventDefault={toggleAddPerspective} type="button">
+                transform: translateX(-50%);" on:click|preventDefault={toggleAddContent} type="button">
                 {#if create_mode == false}
                 + Add Perspective
                 {:else}
@@ -477,6 +413,7 @@ create_mode = "error";
     background: #ee8a65;
   }
 
+  /* For responsive formatting, this covers screens wider than mobile */
   @media only screen and (min-width: 601px) {
   #content_textarea {
     height: 100px !important;
