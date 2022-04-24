@@ -3,4 +3,4 @@
     export let content = "content should be here";
 </script>
 
-<p>{content}</p>
+<p style="white-space: pre;">{content}</p>
