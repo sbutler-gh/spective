@@ -5,6 +5,7 @@
 import { inputs_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
 import { get } from 'svelte/store';
+import { variables } from '$lib/variables';
 
   export let sites;
 
@@ -19,9 +20,11 @@ import { get } from 'svelte/store';
   let content;
 
   let page = 'about'
-  let center = { lat: 38.88, lng: -77.1318825263977 }
-  let marker = center
-  let zoom = 14
+  // let center = { lat: 38.88, lng: -77.1318825263977 }
+  // let marker = center
+  let center;
+  let marker;
+  let zoom = 12;
   let mapComponent;
 
   let create_mode = false;
@@ -34,8 +37,46 @@ import { get } from 'svelte/store';
   onMount(async() => {
 
     console.log(sites);
+    ipToCoordinates();
 
   })
+
+  async function ipToCoordinates() {
+    
+    const ip = await fetch("https://serene-journey-42564.herokuapp.com/https://api.ipify.org?format=json&callback=getIP");
+    
+    const ip_json = await ip.json();
+    console.log(ip_json);
+    
+    const request = await fetch(`https://serene-journey-42564.herokuapp.com/ipinfo.io/${ip_json["ip"]}/geo?token=${variables.ipInfo}`, {
+        method: 'GET',
+        "Content-Type": "application/json",
+        "charset": "utf-8",
+        "Access-Control-Allow-Headers": "X-Requested-With",
+        "X-Requested-With": "XMLHttpRequest"   
+    });
+    
+    const json = await request.json()
+    
+    console.log(json);
+    
+    // address = `${json.city}, ${json.region}, ${json.country}, ${json.postal}`;
+    // city = json.city;
+    // region = json.region;
+    // postal = json.postal;
+    // country = json.country;
+    let coordinates = json.loc.split(',');
+    coordinates = {"lat": coordinates[0], "lng": coordinates[1]};
+    center = coordinates;
+    mapComponent.setCenter({lng: center.lng, lat: center.lat})
+    marker = center;
+    // Seattle coordinates for testing
+    // coordinates = {"lat": 47.6083, "lng": -122.335167};
+    //         coordinates = {
+    //     "lat": 37.7790262,
+    //     "lng": -122.419906
+    // }
+    }
 
   function addSites() {
 
