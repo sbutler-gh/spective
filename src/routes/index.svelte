@@ -406,7 +406,8 @@ function updatePointsForNewPrompt() {
   }
 
   #add_content_button {
-    bottom: 20% !important;
+    bottom: 25% !important;
+    font-size: 20px;
   }
 }
 
