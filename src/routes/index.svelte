@@ -244,8 +244,8 @@ import { variables } from '$lib/variables';
 
   export const load = async ({ fetch }) => {
 
-    // We get the data via the load_sites endpoint
-    const res = await fetch('/load_sites',{
+    // We get the data via the fetch_points endpoint
+    const res = await fetch('/fetch_points',{
       method: 'get'
     });
 
@@ -271,7 +271,7 @@ import { variables } from '$lib/variables';
 
 			return {
 				props: { 
-          sites: sites.table
+          points: points.table
         }
 			};
 		}
