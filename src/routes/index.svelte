@@ -2,20 +2,24 @@
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
   import Content from './Content.svelte';
-import { points_prompt_store, points_store, prompts_store, current_prompt_store } from '$lib/stores';
+import { points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store, route_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
 import { get } from 'svelte/store';
 import { variables } from '$lib/variables';
+import AddPrompt from './AddPrompt.svelte';
+import AllPrompts from './AllPrompts.svelte';
 
   // let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
 
   const { GeolocateControl, NavigationControl } = controls
-  const place = null
+  const place = null;
 
   let content;
 
+  // export let center;
 
-  let center;
+  $: center = $map_center_store;
+
   let marker;
   let zoom = 12;
   let mapComponent;
@@ -29,92 +33,11 @@ import { variables } from '$lib/variables';
   // This is used to destroy and refresh the <Content > component when new content is available, so the map source and layers are redrawn with the updated/new data.
   let unique = {}
 
-  // On page load
-  onMount(async() => {
-
-    // We geolocate the user's IP address, to initialize the map settings near where they are and center the map on a familiar place.
-    ipToCoordinates()
-    .then(async() => {
-            fetchPrompts();
-     })
-
-  })
-
-  // We take the user's IP, get coordinates from it (an approximate location — usually the data center nearest them), and update the map location to those coordinates.
-  async function ipToCoordinates() {
-    
-    const ip = await fetch("https://serene-journey-42564.herokuapp.com/https://api.ipify.org?format=json&callback=getIP");
-    
-    const ip_json = await ip.json();
-    console.log(ip_json);
-    
-    const request = await fetch(`https://serene-journey-42564.herokuapp.com/ipinfo.io/${ip_json["ip"]}/geo?token=${variables.ipInfo}`, {
-        method: 'GET',
-        "Content-Type": "application/json",
-        "charset": "utf-8",
-        "Access-Control-Allow-Headers": "X-Requested-With",
-        "X-Requested-With": "XMLHttpRequest"   
-    });
-    
-    const json = await request.json()
-    
-    console.log(json);
-    
-    let coordinates = json.loc.split(',');
-    coordinates = {"lat": coordinates[0], "lng": coordinates[1]};
-    center = coordinates;
+  onMount(() => {
+    console.log(center);
     mapComponent.setCenter({lng: center.lng, lat: center.lat})
     marker = center;
-    }
-
-  async function fetchPrompts() {
-
-    const response = await fetch('/fetch_prompts',{
-      method: 'get'
-    });
-
-  if (response.ok) {
-
-    let prompts = await response.json();
-
-    console.log(prompts);
-    console.log(prompts.table);
-
-    prompts_store.set(prompts.table);
-
-    $current_prompt_store = $prompts_store[0];
-
-    let points_prompt_array = $points_store.filter(point => point.prompt_id == $prompts_store[0].id);
-
-    let points_prompt_store_array = [];
-
-      // For each item of data from the backend
-      for (var i=0; i < points_prompt_array.length; i++) {
-
-      // We convert it into geojson feature format
-      let new_point =  { "type": "Feature", "properties": { "id": points_prompt_array[i].id, "content": points_prompt_array[i].content, "prompt_id": points_prompt_array[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points_prompt_array[i].lng, points_prompt_array[i].lat, 0.0 ] } }
-
-      // And push it to the array
-      points_prompt_store_array.push(new_point);
-      }
-
-      console.log(points_prompt_array);
-      console.log(points_prompt_store_array)
-
-    points_prompt_store.set(points_prompt_store_array);
-    
-    // This is used to destroy and refresh the <Content > component when new content is available, so the map source and layers are redrawn with the updated/new data.
-    unique = {}
-
-  }
-
-  else {
-  let response_json = await response.json();
-  console.log(response_json);
-  console.log(response_json.status);
-  console.log(response.body);
-  }
-}
+  })
 
   function navigate (next) {
     page = next
@@ -297,59 +220,30 @@ import { variables } from '$lib/variables';
 
   }
 
-</script>
+function updatePointsForNewPrompt() {
 
-<!-- This script runs first, as soon as the page is loaded, before anything in the script tag above -->
-<!-- The very first thing we do is load data from the backend, so we can populate the map with it -->
-<script context="module">
+  let points_prompt_array = $points_store.filter(point => point.prompt_id == $current_prompt_store.id);
 
-  export const load = async ({ fetch }) => {
+  let points_prompt_store_array = [];
 
-    // We get the data via the fetch_points endpoint
-    const res = await fetch('/fetch_points',{
-      method: 'get'
-    });
+  // For each item of data from the backend
+  for (var i=0; i < points_prompt_array.length; i++) {
 
-		if (res.ok) {
-      console.log('okay');
-      
-			const points = await res.json();
+  // We convert it into geojson feature format
+  let new_point =  { "type": "Feature", "properties": { "id": points_prompt_array[i].id, "content": points_prompt_array[i].content, "prompt_id": points_prompt_array[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points_prompt_array[i].lng, points_prompt_array[i].lat, 0.0 ] } }
 
-      let points_array = [];
+  // And push it to the array
+  points_prompt_store_array.push(new_point);
+  }
 
-      // For each item of data from the backend
-      for (var i=0; i < points.table.length; i++) {
+  points_prompt_store.set(points_prompt_store_array);
 
-        // We convert it into geojson feature format
-        let new_point =  { "type": "Feature", "properties": { "id": points.table[i].id, "content": points.table[i].content, "prompt_id": points.table[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points.table[i].lng, points.table[i].lat, 0.0 ] } }
+  unique = {}
 
-        // And push it to the array
-        points_array.push(new_point);
-      }
-
-      // And we set the inputs_store to the inputs_array, filled with data from the backend
-      points_store.set(points.table);
-
-      // points_prompt_store.set(points_array);
-
-			return {
-				props: { 
-          points: points.table
-        }
-			};
-		}
-
-    else {
-      console.log(res);
-    }
-
-		const { message } = await res.json();
-
-		return {
-			error: new Error(message)
-		};
-	};
+  $route_store = "";
   
+  }
+
 </script>
           <!-- <div class="section-txt" id="geocoder">
             <form>
@@ -365,11 +259,34 @@ import { variables } from '$lib/variables';
             </form>
           </div> -->
 
+          {#if $route_store}
+          <section class="overlay" style="height: 100vh; width: 100vw; position: absolute; z-index: 1000;">
+            {#if $route_store == "AddPrompt"}
+            <AddPrompt on:updateprompt={updatePointsForNewPrompt}></AddPrompt>
+            {:else if $route_store == "AllPrompts"}
+            <AllPrompts on:updateprompt={updatePointsForNewPrompt}></AllPrompts>
+            {/if}
+          </section>
+          {/if}
+
 
           <div class="section-txt" id="map">
             <!-- <button on:click={publishSite}>Publish Site</button> -->
             <div style="position: default; z-index: 100; top: 0; margin: auto; background: black; color: white; padding: 20px; text-align: center;">
             <div style="background: black; color: white;">
+              
+              <!-- This commented out section is if using actual page navigation.  Instead, we'll load these pages as components, to avoid recreating the map every time. -->
+              <!-- <header class="prompt-header">
+                <a href="all_prompts">All Prompts</a>
+                <a href="add_prompt" style="margin-left: auto; display: block;">Add Prompt</a>
+                </header> -->
+
+                <!-- With these links, we'll just be updating the route_store, to load the appropriate component on top of the map – this prevents us needing to re-render the map every time we return to the home page. -->
+                <header class="prompt-header">
+                  <a on:click={function() { $route_store = "AllPrompts"}}>All Prompts</a>
+                  <a on:click={function() { $route_store = "AddPrompt"}} style="margin-left: auto; display: block;">Add Prompt</a>
+                  </header> 
+
               <p id="prompt" style="max-width: 600px; margin: auto;">{$current_prompt_store?.content}</p>
               <!-- <button>+ Add New</button> -->
             </div>

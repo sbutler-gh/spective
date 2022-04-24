@@ -29,8 +29,8 @@
 
   map.addSource('content', {
     type: 'geojson',
-    // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
-    // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
+    
+    // Point to GeoJSON data. This example visualizes all points for the selected prompt
     data:  {
         "type": "FeatureCollection",
         "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },

@@ -46,3 +46,23 @@ h1,h2,h3{line-height:1.2}
 	  /* cursor: crosshair !important; */
 	/* cursor: url("data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' style='font-size: 24px'><text y='20'>📍</text></svg>"), auto !important; */
   }
+
+  .prompt-header {
+        display: flex;
+        max-width: 1000px;
+        margin: auto;
+		margin-bottom: 1em;
+  }
+
+  .prompt-header a {
+	  color: white;
+	  text-decoration: underline;
+	  cursor: pointer;
+  }
+
+  main.black {
+	background: black;
+	color: white;
+	height: 100vh;
+	padding: 10px;
+	}
