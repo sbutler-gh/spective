@@ -11,7 +11,7 @@ export async function post({ request }) {
   console.log(request);
 
   const { data, error } = await supabase
-  .from('initiatives')
+  .from('points')
   .insert([
     { 
       lng: body.get('lng'),

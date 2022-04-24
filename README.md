@@ -4,7 +4,7 @@ This is a basic version of the site, which offers a mapbox map with a prompt, an
 
 1. Run `git clone [repository url]`
 2. `cd` into the repo and run `npm install`
-3. Set-up a project at [https://supabase.com](Supabase) with a table called `initiatives` and that includes columns for `id`(uuid), `lat` (text), `lng` (text), `latlng` (json), and `content`(text).  (You can of course edit these as you like — this is just to get it up and running, with the existing code.)
+3. Set-up a project at [https://supabase.com](Supabase) with a table called `points` and that includes columns for `id`(uuid), `lat` (text), `lng` (text), `latlng` (json), and `content`(text).  (You can of course edit these as you like — this is just to get it up and running, with the existing code.)
 3. Add a `.env` file in the root folder with the following items:
 
 VITE_SUPABASE_URL=[supabase_url]

@@ -6,7 +6,7 @@ export const get = async () => {
 
     try {
       const { data: table, error } = await supabase
-      .from('initiatives')
+      .from('points')
       .select('*');
       
       return {
