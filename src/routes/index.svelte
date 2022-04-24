@@ -277,6 +277,8 @@ create_mode = "error";
 
       create_mode = "success";
 
+      document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
+
       selected_location = null;
 
       setTimeout(function() {
@@ -291,6 +293,8 @@ create_mode = "error";
   console.log(response.body);
 
   create_mode = "error";
+
+  document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
 
   setTimeout(function() {
         create_mode = false;
@@ -367,7 +371,7 @@ create_mode = "error";
             <!-- <button on:click={publishSite}>Publish Site</button> -->
             <div style="position: default; z-index: 100; top: 0; margin: auto; background: black; color: white; padding: 20px; text-align: center;">
             <div style="background: black; color: white;">
-              <p>{prompt}</p>
+              <p id="prompt" style="max-width: 600px; margin: auto;">{prompt}</p>
               <!-- <button>+ Add New</button> -->
             </div>
             </div>
@@ -379,9 +383,9 @@ create_mode = "error";
                 <button style="margin-bottom: 5px;" on:click|preventDefault={function() { create_mode = "input_data"}}>Next</button>
                 {/if} -->
               {:else if create_mode == "input_content"}
-              <form on:submit|preventDefault={submitContent} style="padding: 10px;">
+              <form id="content_form" on:submit|preventDefault={submitContent} style="padding: 10px; max-width: 600px; margin: auto;">
                 <!-- <label for="perspective" style="text-align: left;">Share your response</label> -->
-                <textarea bind:value={content} style="width: 100%; height: 50px;" name="content"></textarea>
+                <textarea id="content_textarea" bind:value={content} style="width: 100%; height: 50px;" name="content"></textarea>
                 {#if content}
                 <button style="margin-left: auto; display: block;">Submit</button>
                 {:else}
@@ -415,7 +419,8 @@ create_mode = "error";
                 <!-- <NavigationControl /> -->
                 <!-- <GeolocateControl on:geolocate={e => console.log('geolocated', e.detail)} /> -->
                 <!-- <Marker lat={marker.lat} lng={marker.lng} /> -->
-                <button style="position: absolute; bottom: 42%; margin: auto; left: 0; display: block; left: 50%;
+                {#if create_mode != "success"}
+                <button id="add_content_button" style="position: absolute; bottom: 42%; margin: auto; left: 0; display: block; left: 50%;
                 -webkit-transform: translateX(-50%);
                 -moz-transform: translateX(-50%);
                 transform: translateX(-50%);" on:click|preventDefault={toggleAddPerspective} type="button">
@@ -423,7 +428,9 @@ create_mode = "error";
                 + Add Perspective
                 {:else}
                 x Cancel
-                {/if}</button>
+                {/if}
+              </button>
+                {/if}
               </Map>
             </div>
             <!-- {#if center}
@@ -469,5 +476,21 @@ create_mode = "error";
     color: #fff;
     background: #ee8a65;
   }
+
+  @media only screen and (min-width: 601px) {
+  #content_textarea {
+    height: 100px !important;
+  }
+
+  #prompt {
+    max-width: 600px;
+    line-height: 22px;
+    /* text-align: left !important; */
+  }
+
+  #add_content_button {
+    bottom: 20% !important;
+  }
+}
 
 </style>
