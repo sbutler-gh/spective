@@ -1,7 +1,13 @@
 import { writable } from "svelte/store";
 
-let inputs_store = writable([
+let points_store = writable([
         ]
 )
 
-export { inputs_store };
+let prompts_store = writable([]);
+
+let points_prompt_store = writable([
+]
+)
+
+export { points_store, prompts_store, points_prompt_store };

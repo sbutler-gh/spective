@@ -2,7 +2,7 @@
   import { getContext } from 'svelte'
   import { contextKey } from '$lib/components.js'
   import MiniScroller from './MiniScroller.svelte'
-  import { inputs_store } from "$lib/stores.js"
+  import { points_prompt_store } from "$lib/stores.js"
 
   const { getMap, getMapbox } = getContext(contextKey)
   const map = getMap()
@@ -19,7 +19,7 @@
     let data = {
         "type": "FeatureCollection",
         "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-        "features": $inputs_store,
+        "features": $points_prompt_store,
     }
     map.getSource('content').setData(data);
   }
@@ -34,7 +34,7 @@
     data:  {
         "type": "FeatureCollection",
         "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-        "features": $inputs_store,
+        "features": $points_prompt_store,
     },
     cluster: true,
     clusterMaxZoom: 14, // Max zoom to cluster points on

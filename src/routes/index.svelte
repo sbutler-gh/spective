@@ -2,7 +2,7 @@
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
   import Content from './Content.svelte';
-import { inputs_store } from '$lib/stores';
+import { points_prompt_store, points_store, prompts_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
 import { get } from 'svelte/store';
 import { variables } from '$lib/variables';
@@ -189,16 +189,20 @@ import { variables } from '$lib/variables';
 
       // We format all of the content as Geojson feature points.
       // So we take the structure of a geojson feature, and insert the id, content, and lat/lng from the data into the feature.
-      let new_input =  { "type": "Feature", "properties": { "id": response_json[0].id, "content": response_json[0].content }, "geometry": { "type": "Point", "coordinates": [ response_json[0].lng, response_json[0].lat, 0.0 ] } }
+      let new_point =  { "type": "Feature", "properties": { "id": response_json[0].id, "content": response_json[0].content }, "geometry": { "type": "Point", "coordinates": [ response_json[0].lng, response_json[0].lat, 0.0 ] } }
       
       // We get the current state of the map data
-      let inputs_array = $inputs_store;
+      let points_array = $points_store;
       
       // We add the new piece of content, the user submission that we just submitted to the backend, to the array of map data
-      inputs_array.push(new_input);
+      points_array.push(new_point);
 
       // And now we set the current state of the map data to inputs_array, which includes the new submission from the line above
-      $inputs_store = inputs_array;
+      $points_store = points_array;
+
+      // For the points_prompt_store, we only select those points from points_array where they have the matching prompt id
+      $points_prompt_store = points_array;
+
 
       // The map data is drawn in the Content.svelte component.  But the map data is already drawn, so simply updating $inputs_store (which is the basis for the map data) doesn't do enough — because the drawing hasn't updated.
       // So we need to destroy the <Content> component, and refresh it.
@@ -252,22 +256,23 @@ import { variables } from '$lib/variables';
 		if (res.ok) {
       console.log('okay');
       
-			const sites = await res.json();
+			const points = await res.json();
 
-      let inputs_array = [];
+      let points_array = [];
 
       // For each item of data from the backend
-      for (var i=0; i < sites.table.length; i++) {
+      for (var i=0; i < points.table.length; i++) {
 
         // We convert it into geojson feature format
-        let new_input =  { "type": "Feature", "properties": { "id": sites.table[i].id, "content": sites.table[i].content}, "geometry": { "type": "Point", "coordinates": [ sites.table[i].lng, sites.table[i].lat, 0.0 ] } }
+        let new_point =  { "type": "Feature", "properties": { "id": points.table[i].id, "content": points.table[i].content}, "geometry": { "type": "Point", "coordinates": [ points.table[i].lng, points.table[i].lat, 0.0 ] } }
 
         // And push it to the array
-        inputs_array.push(new_input);
+        points_array.push(new_point);
       }
 
       // And we set the inputs_store to the inputs_array, filled with data from the backend
-      inputs_store.set(inputs_array);
+      points_store.set(points_array);
+      points_prompt_store.set(points_array);
 
 			return {
 				props: { 
