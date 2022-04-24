@@ -33,7 +33,10 @@ import { variables } from '$lib/variables';
   onMount(async() => {
 
     // We geolocate the user's IP address, to initialize the map settings near where they are and center the map on a familiar place.
-    ipToCoordinates();
+    ipToCoordinates()
+    .then(async() => {
+            fetchPrompts();
+     })
 
   })
 
@@ -63,6 +66,59 @@ import { variables } from '$lib/variables';
     mapComponent.setCenter({lng: center.lng, lat: center.lat})
     marker = center;
     }
+
+  async function fetchPrompts() {
+
+    const response = await fetch('/fetch_prompts',{
+      method: 'get'
+    });
+
+  if (response.ok) {
+
+    let prompts = await response.json();
+
+    console.log(prompts);
+    console.log(prompts.table);
+
+    prompts_store.set(prompts.table);
+
+    prompt = $prompts_store[0].content;
+
+    console.log($prompts_store[0].id);
+
+    console.log(get(points_store))
+
+    let points_prompt_array = $points_store.filter(point => point.prompt_id == $prompts_store[0].id);
+
+    let points_prompt_store_array = [];
+
+      // For each item of data from the backend
+      for (var i=0; i < points_prompt_array.length; i++) {
+
+      // We convert it into geojson feature format
+      let new_point =  { "type": "Feature", "properties": { "id": points_prompt_array[i].id, "content": points_prompt_array[i].content, "prompt_id": points_prompt_array[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points_prompt_array[i].lng, points_prompt_array[i].lat, 0.0 ] } }
+
+      // And push it to the array
+      points_prompt_store_array.push(new_point);
+      }
+
+      console.log(points_prompt_array);
+      console.log(points_prompt_store_array)
+
+    points_prompt_store.set(points_prompt_store_array);
+    
+    // This is used to destroy and refresh the <Content > component when new content is available, so the map source and layers are redrawn with the updated/new data.
+    unique = {}
+
+  }
+
+  else {
+  let response_json = await response.json();
+  console.log(response_json);
+  console.log(response_json.status);
+  console.log(response.body);
+  }
+}
 
   function navigate (next) {
     page = next
@@ -177,8 +233,8 @@ import { variables } from '$lib/variables';
     formData.append('lng_lat', JSON.stringify(selected_location.lng, selected_location.lat));
 
 
-    // Sending all of this to the publish_location endpoint
-  const response = await fetch('/publish_location', {
+    // Sending all of this to the create_point endpoint
+  const response = await fetch('/create_point', {
   method: 'post',
   body: formData
   })
@@ -264,15 +320,16 @@ import { variables } from '$lib/variables';
       for (var i=0; i < points.table.length; i++) {
 
         // We convert it into geojson feature format
-        let new_point =  { "type": "Feature", "properties": { "id": points.table[i].id, "content": points.table[i].content}, "geometry": { "type": "Point", "coordinates": [ points.table[i].lng, points.table[i].lat, 0.0 ] } }
+        let new_point =  { "type": "Feature", "properties": { "id": points.table[i].id, "content": points.table[i].content, "prompt_id": points.table[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points.table[i].lng, points.table[i].lat, 0.0 ] } }
 
         // And push it to the array
         points_array.push(new_point);
       }
 
       // And we set the inputs_store to the inputs_array, filled with data from the backend
-      points_store.set(points_array);
-      points_prompt_store.set(points_array);
+      points_store.set(points.table);
+
+      // points_prompt_store.set(points_array);
 
 			return {
 				props: { 
