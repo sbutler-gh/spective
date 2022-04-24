@@ -10,14 +10,24 @@ import { get } from 'svelte/store';
 
   let earthquakes = true;
 
+  let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
+
   const { GeolocateControl, NavigationControl } = controls
   const place = null
+
+  // let perspective;
+  let content;
 
   let page = 'about'
   let center = { lat: 38.88, lng: -77.1318825263977 }
   let marker = center
   let zoom = 14
   let mapComponent;
+
+  let create_mode = false;
+  // let create_mode = "input_content";
+  let create_step;
+  let selected_location;
 
   let unique = {}
 
@@ -84,6 +94,10 @@ let response_json = await response.json();
 
     unique = {};
 
+    // create_mode = "success";
+
+    // selected_location = null;
+
 // console.log(response_json);
 // console.log(response_json[0].id);
 
@@ -101,6 +115,8 @@ let response_json = await response.json();
 console.log(response_json);
 console.log(response_json.status);
 console.log(response.body);
+
+create_mode = "error";
 }
 
 }
@@ -139,6 +155,109 @@ console.log(response.body);
   function drag ({ detail }) {
     marker = detail.center
   }
+
+  function toggleAddPerspective() {
+    // (create_mode == false) ? create_mode = true : create_mode = false;
+
+    setTimeout(function() {
+    if (create_mode == false) {
+      create_mode = "select_location";
+      // console.log(document.getElementsByClassName('mapboxgl-canvas-container')[0]);
+      document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: crosshair! important;";
+
+      // document.getElementsByClassName('map-wrap')[0].addEventListener('click', clickLocation)
+    }
+    else {
+      create_mode = false;
+      selected_location = null;
+      // console.log(document.getElementsByClassName('mapboxgl-canvas-container')[0]);
+      document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
+
+      // document.getElementsByClassName('map-wrap')[0].removeEventListener('click', clickLocation);
+    }}, 50)
+  }
+
+  function clickLocation(e) {
+    console.log('test');
+    console.log(e);
+  }
+
+  function selectLocation( { detail }) {
+    if (create_mode != false) {
+
+      if (detail.lat) {
+      console.log(detail);
+      console.log(detail.lat);
+      selected_location = detail;
+      console.log(selected_location);
+      
+      if (zoom < 16) {
+        mapComponent.setCenter({lng: selected_location.lng, lat: selected_location.lat});
+        zoom = 16;
+      }
+
+      create_mode != "input_content" ? create_mode = "input_content" : null;
+      }
+    }
+  }
+
+  async function submitContent(e) {
+    // let formData = new formData(e.target);
+
+    var formData = new FormData(e.target);
+
+    formData.append('lng', selected_location.lng);
+    formData.append('lat', selected_location.lat);
+    formData.append('lng_lat', JSON.stringify(selected_location.lng, selected_location.lat));
+
+
+  const response = await fetch('/publish_location', {
+  method: 'post',
+  body: formData
+  })
+
+  if (response.ok) {
+
+  let response_json = await response.json();
+
+      let new_input =  { "type": "Feature", "properties": { "id": response_json[0].id, "content": response_json[0].content, "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ response_json[0].lng, response_json[0].lat, 0.0 ] } }
+      
+      let inputs_array = $inputs_store;
+
+      console.log(inputs_array);
+      
+      inputs_array.push(new_input);
+
+      console.log(inputs_array);
+
+      $inputs_store = inputs_array;
+
+      unique = {};
+
+      create_mode = "success";
+
+      selected_location = null;
+
+      setTimeout(function() {
+        create_mode = false;
+      }, 3000)
+  }
+
+  else {
+  let response_json = await response.json();
+  console.log(response_json);
+  console.log(response_json.status);
+  console.log(response.body);
+
+  create_mode = "error";
+
+  setTimeout(function() {
+        create_mode = false;
+      }, 10000)
+  }
+
+  }
+
 </script>
 
 <script context="module">
@@ -160,7 +279,7 @@ console.log(response.body);
 
       for (var i=0; i < sites.table.length; i++) {
 
-        let new_input =  { "type": "Feature", "properties": { "id": sites.table[i].id, "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ sites.table[i].lng, sites.table[i].lat, 0.0 ] } }
+        let new_input =  { "type": "Feature", "properties": { "id": sites.table[i].id, "content": sites.table[i].content, "mag": 4.1, "time": 1507411448780, "felt": null, "tsunami": 0 }, "geometry": { "type": "Point", "coordinates": [ sites.table[i].lng, sites.table[i].lat, 0.0 ] } }
 
         inputs_array.push(new_input);
       }
@@ -201,24 +320,69 @@ console.log(response.body);
             {/if}
             </form>
           </div> -->
+
+
           <div class="section-txt" id="map">
-            <button on:click={publishSite}>Publish Site</button>
+            <!-- <button on:click={publishSite}>Publish Site</button> -->
+            <div style="position: default; z-index: 100; top: 0; margin: auto; background: black; color: white; padding: 20px; text-align: center;">
+            <div style="background: black; color: white;">
+              <p>{prompt}</p>
+              <!-- <button>+ Add New</button> -->
+            </div>
+            </div>
+            {#if create_mode != false}
+            <div style="position: absolute; z-index: 100; top: 5; width: 100%; background: white; color: black; text-align: center;">
+              {#if create_mode == "select_location"}
+              <p>Select a location</p>
+                <!-- {#if selected_location}
+                <button style="margin-bottom: 5px;" on:click|preventDefault={function() { create_mode = "input_data"}}>Next</button>
+                {/if} -->
+              {:else if create_mode == "input_content"}
+              <form on:submit|preventDefault={submitContent} style="padding: 10px;">
+                <!-- <label for="perspective" style="text-align: left;">Share your response</label> -->
+                <textarea bind:value={content} style="width: 100%; height: 50px;" name="content"></textarea>
+                {#if content}
+                <button style="margin-left: auto; display: block;">Submit</button>
+                {:else}
+                <button style="margin-left: auto; display: block;" disabled=disabled>Submit</button>
+                {/if}
+              </form>
+              {:else if create_mode == "success"}
+              <h4 style="color:darkgreen">Success!</h4>
+              {:else if create_mode == "error"}
+              <h4 style="color:darkred">Problem submitting, please try again or contact spect@sambutler.us</h4>
+              {/if}
+            </div>
+            {/if}
             <div class="map-wrap">
               <Map
                 bind:this={mapComponent}
                 accessToken={mapboxToken}
                 on:recentre={recentre}
                 on:drag={drag}
+                on:click={selectLocation}
                 {center}
                 bind:zoom
               >
+              {#if create_mode && selected_location}
+              <Marker lat={selected_location.lat} lng={selected_location.lng}></Marker>
+              {/if}
               {#key unique}
                 <Earthquakes />
               {/key}
 
-                <NavigationControl />
-                <GeolocateControl on:geolocate={e => console.log('geolocated', e.detail)} />
-                <Marker lat={marker.lat} lng={marker.lng} />
+                <!-- <NavigationControl /> -->
+                <!-- <GeolocateControl on:geolocate={e => console.log('geolocated', e.detail)} /> -->
+                <!-- <Marker lat={marker.lat} lng={marker.lng} /> -->
+                <button style="position: absolute; bottom: 42%; margin: auto; left: 0; display: block; left: 50%;
+                -webkit-transform: translateX(-50%);
+                -moz-transform: translateX(-50%);
+                transform: translateX(-50%);" on:click|preventDefault={toggleAddPerspective} type="button">
+                {#if create_mode == false}
+                + Add Perspective
+                {:else}
+                x Cancel
+                {/if}</button>
               </Map>
             </div>
             <!-- {#if center}
@@ -229,6 +393,7 @@ console.log(response.body);
           </div>
 
 <style>
+  
   :global(#logo svg) {
     fill: white;
     height: 60px;

@@ -17,7 +17,7 @@ export async function post({ request }) {
       lng: body.get('lng'),
       lat: body.get('lat'),
       lng_lat: body.get('lng_lat'),
-      perspective: body.get('perspective')
+      content: body.get('content')
         }
     ]);
     

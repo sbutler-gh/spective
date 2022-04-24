@@ -131,7 +131,14 @@
 
     console.log(e.features[0]);
   
-    map.setCenter(coordinates)
+    // should be centered, but need to figure out the map dimensions first
+    // map.setCenter(coordinates)
+
+    // This removes the bug that happens when clicking a point when a popup is already present
+    if (document.getElementById('mini-scroller')) {
+      console.log('present');
+      document.getElementById('mini-scroller').remove();
+    }
 
     new mapbox.Popup({})
       .setLngLat(coordinates)
@@ -140,7 +147,7 @@
 
     new MiniScroller({ 
       target: document.getElementById('mini-scroller'), 
-      props: { id:e.features[0]._vectorTileFeature.properties.id } 
+      props: { id:e.features[0]._vectorTileFeature.properties.id, content:e.features[0]._vectorTileFeature.properties.content } 
      }) // eslint-disable-line no-new
   })
   
