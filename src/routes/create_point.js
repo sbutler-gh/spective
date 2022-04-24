@@ -17,7 +17,8 @@ export async function post({ request }) {
       lng: body.get('lng'),
       lat: body.get('lat'),
       lng_lat: body.get('lng_lat'),
-      content: body.get('content')
+      content: body.get('content'),
+      prompt_id: body.get('prompt_id')
         }
     ]);
     

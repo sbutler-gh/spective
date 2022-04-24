@@ -2,12 +2,12 @@
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
   import Content from './Content.svelte';
-import { points_prompt_store, points_store, prompts_store } from '$lib/stores';
+import { points_prompt_store, points_store, prompts_store, current_prompt_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
 import { get } from 'svelte/store';
 import { variables } from '$lib/variables';
 
-  let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
+  // let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
 
   const { GeolocateControl, NavigationControl } = controls
   const place = null
@@ -82,11 +82,7 @@ import { variables } from '$lib/variables';
 
     prompts_store.set(prompts.table);
 
-    prompt = $prompts_store[0].content;
-
-    console.log($prompts_store[0].id);
-
-    console.log(get(points_store))
+    $current_prompt_store = $prompts_store[0];
 
     let points_prompt_array = $points_store.filter(point => point.prompt_id == $prompts_store[0].id);
 
@@ -232,6 +228,9 @@ import { variables } from '$lib/variables';
     formData.append('lat', selected_location.lat);
     formData.append('lng_lat', JSON.stringify(selected_location.lng, selected_location.lat));
 
+    // Adding the prompt id to the submission
+    formData.append('prompt_id', $current_prompt_store.id);
+
 
     // Sending all of this to the create_point endpoint
   const response = await fetch('/create_point', {
@@ -249,15 +248,17 @@ import { variables } from '$lib/variables';
       
       // We get the current state of the map data
       let points_array = $points_store;
+      let points_prompt_store_array = $points_prompt_store;
       
       // We add the new piece of content, the user submission that we just submitted to the backend, to the array of map data
-      points_array.push(new_point);
+      points_array.push(response_json[0]);
+      points_prompt_store_array.push(new_point);
 
       // And now we set the current state of the map data to inputs_array, which includes the new submission from the line above
       $points_store = points_array;
 
       // For the points_prompt_store, we only select those points from points_array where they have the matching prompt id
-      $points_prompt_store = points_array;
+      $points_prompt_store = points_prompt_store_array;
 
 
       // The map data is drawn in the Content.svelte component.  But the map data is already drawn, so simply updating $inputs_store (which is the basis for the map data) doesn't do enough — because the drawing hasn't updated.
@@ -369,7 +370,7 @@ import { variables } from '$lib/variables';
             <!-- <button on:click={publishSite}>Publish Site</button> -->
             <div style="position: default; z-index: 100; top: 0; margin: auto; background: black; color: white; padding: 20px; text-align: center;">
             <div style="background: black; color: white;">
-              <p id="prompt" style="max-width: 600px; margin: auto;">{prompt}</p>
+              <p id="prompt" style="max-width: 600px; margin: auto;">{$current_prompt_store?.content}</p>
               <!-- <button>+ Add New</button> -->
             </div>
             </div>
