@@ -341,7 +341,7 @@ function updatePointsForNewPrompt() {
                 -moz-transform: translateX(-50%);
                 transform: translateX(-50%);" on:click|preventDefault={toggleAddContent} type="button">
                 {#if create_mode == false}
-                + Add Perspective
+                + Add Response
                 {:else}
                 x Cancel
                 {/if}
