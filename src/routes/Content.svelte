@@ -92,9 +92,9 @@
     filter: [ '!', [ 'has', 'point_count' ] ],
     paint: {
       'circle-color': '#11b4da',
-      'circle-radius': 4,
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#fff'
+      'circle-radius': 6,
+      'circle-stroke-width': 1.5,
+      'circle-stroke-color': 'black'
     }
   })
 
@@ -136,7 +136,12 @@
     console.log(e.features[0]);
   
     // should be centered, but need to figure out the map dimensions first
-    // map.setCenter(coordinates)
+    console.log(coordinates);
+    let updated_center;
+    screen.width < 600 ? updated_center = [ coordinates[0], coordinates[1] - 0.025 ] : updated_center = [ coordinates[0], coordinates[1] - 0.015 ];
+    // let updated_center = [ coordinates[0], coordinates[1] - 0.015 ]
+    console.log(updated_center);
+    map.setCenter(updated_center)
 
     // There is a bug that occurs, when you have clicked on one point and are viewing the popup.  If you click on another point, while the first popup is visible, then the popup for the other point will incorrectly display.
     // So this conditional checks to see if a popup already exists on the page, and removes it if it does, to bypass that bug.  Not sure about the behavior causing the root issue — this was simpler for now.
