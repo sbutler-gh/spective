@@ -66,3 +66,35 @@ h1,h2,h3{line-height:1.2}
 	height: 100vh;
 	padding: 10px;
 	}
+
+	main.modal {
+		height: 400px;
+		width: 500px;
+		max-height: 45vh;
+		max-width: 85vw;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background: white;
+		z-index: 1000000;
+		overflow: auto;
+		padding: 10px;
+		/* box-shadow: 5px 10px 0px 0px; */
+	}
+
+	main.modal button, main.modal span {
+		cursor: pointer;
+	}
+
+	.modal_background_dim {
+		position: absolute;
+		z-index: 99999;
+		background: black;
+		opacity: 70%;
+		height: 100vh;
+		width: 100vw;
+		top: 0;
+		left: 0;
+		cursor: pointer;
+	}

@@ -16,4 +16,6 @@ let map_center_store = writable();
 
 let route_store = writable();
 
-export { points_store, prompts_store, points_prompt_store, current_prompt_store, map_center_store, route_store };
+let user_store = writable();
+
+export { user_store, points_store, prompts_store, points_prompt_store, current_prompt_store, map_center_store, route_store };

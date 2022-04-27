@@ -2,12 +2,13 @@
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
   import Content from './Content.svelte';
-import { points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store, route_store } from '$lib/stores';
+import { user_store, points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store, route_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
 import { get } from 'svelte/store';
 import { variables } from '$lib/variables';
 import AddPrompt from './AddPrompt.svelte';
 import AllPrompts from './AllPrompts.svelte';
+import IntroModal from './IntroModal.svelte';
 
   // let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
 
@@ -15,6 +16,8 @@ import AllPrompts from './AllPrompts.svelte';
   const place = null;
 
   let content;
+
+  let display_intro_modal = true;
 
   // export let center;
 
@@ -34,10 +37,50 @@ import AllPrompts from './AllPrompts.svelte';
   let unique = {}
 
   onMount(() => {
+
+    // getUser();
+
     console.log(center);
     mapComponent.setCenter({lng: center.lng, lat: center.lat})
     marker = center;
   })
+
+  function getUser() {
+
+    // If it's the user's first visit, we want to have a modal which gives information and further instruction for how to use the site.
+    // To guess at this, we'll use a local_storage item called user.  In the future, if a user has created an account, their account information will be called from local storage.
+    // Likewise, if a person has visited the site from this device, we'll set their user value to "guest" — knowing that they've been here before, and don't need to see the popup.
+
+    let user = localStorage.getItem('user');
+
+    // We'll set the user_store to the what we get out of localStorage, and if that value is undefined (instead of guest, or user data) then we'll presume it's a first time visitor and show welcome information (which will be handled in index.svelte)
+    console.log(localStorage.getItem('user'));
+
+    if (!user || user == "guest") {
+      user_store.set(user);
+    }
+    else {
+      user_store.set(JSON.parse(user))
+    }
+
+    // JSON.parse(user) ? user_store.set(JSON.parse(user)) : user_store.set(user);
+    // user_store.set(user);
+    console.log("user_store" + get(user_store));
+
+    // If there is a user with an id (not guest), we can prepare their account information.
+    // if (user?.id) {
+
+    // }
+
+    // We'll check the user_store to see about user information, and if there is none (as opposed to a guest who is returning), then we'll display the welcome information modal
+    if ($user_store) {
+      null;
+    }
+    else {
+      display_intro_modal = true;
+      localStorage.setItem('user', 'guest');
+    }
+  }
 
   function navigate (next) {
     page = next
@@ -269,7 +312,6 @@ function updatePointsForNewPrompt() {
           </section>
           {/if}
 
-
           <div class="section-txt" id="map">
             <!-- <button on:click={publishSite}>Publish Site</button> -->
             <div style="position: default; z-index: 100; top: 0; margin: auto; background: black; color: white; padding: 20px; text-align: center;">
@@ -315,6 +357,12 @@ function updatePointsForNewPrompt() {
               {/if}
             </div>
             {/if}
+
+            {#if display_intro_modal}
+            <div class="modal_background_dim" on:click={function() {display_intro_modal = false}}></div>
+            <IntroModal on:closeintromodal={function() {display_intro_modal = false}}></IntroModal>
+             {/if}
+
             <div class="map-wrap">
               <Map
                 bind:this={mapComponent}

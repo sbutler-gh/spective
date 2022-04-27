@@ -1,6 +1,6 @@
 <script>
   import "../app.css";
-  import { points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store } from '$lib/stores';
+  import { user_store, points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store } from '$lib/stores';
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
   import Content from './Content.svelte';
