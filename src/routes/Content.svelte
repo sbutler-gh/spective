@@ -124,6 +124,9 @@
   })
 
   map.on('click', 'unclustered-point', function (e) {
+    
+    console.log(map.getZoom());
+
     const coordinates = e.features[0].geometry.coordinates.slice()
   
     // Ensure that if the map is zoomed out such that multiple
@@ -138,7 +141,17 @@
     // should be centered, but need to figure out the map dimensions first
     console.log(coordinates);
     let updated_center;
+
+    if (map.getZoom() < 13) {
     screen.width < 600 ? updated_center = [ coordinates[0], coordinates[1] - 0.025 ] : updated_center = [ coordinates[0], coordinates[1] - 0.015 ];
+    }
+    else if (map.getZoom() < 14) {
+      screen.width < 600 ? updated_center = [ coordinates[0], coordinates[1] - 0.0075 ] : updated_center = [ coordinates[0], coordinates[1] - 0.0035 ];
+      // updated_center = coordinates;
+    }
+    else if (map.getZoom() < 15) {
+      screen.width < 600 ? updated_center = [ coordinates[0], coordinates[1] - 0.0075 ] : updated_center = [ coordinates[0], coordinates[1] - 0.0035 ];
+    }
     // let updated_center = [ coordinates[0], coordinates[1] - 0.015 ]
     console.log(updated_center);
     map.setCenter(updated_center)
