@@ -500,16 +500,16 @@ if (!navigator.clipboard){
   <meta property="og:url" content="https://spect.netlify.app/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="{prompt?.content}">
-  <meta property="og:description" content="Add your response to the map!">
-  <meta property="og:image" content="./spect_og_image.png">
+  <meta property="og:description" content="Add your perspective to the map!">
+  <meta property="og:image" content="https://i.imgur.com/qSBYoTH.png">
   
   <!-- Twitter Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
   <meta property="twitter:domain" content="spect.netliy.app">
   <meta property="twitter:url" content="https://spect.netlify.app">
   <meta property="og:title" content="{prompt?.content}">
-  <meta property="og:description" content="Add your response to the map!">
-  <meta name="twitter:image" content="./spect_og_image.png">
+  <meta property="og:description" content="Add your perspective to the map!">
+  <meta name="twitter:image" content="https://i.imgur.com/qSBYoTH.png">
   {:else}
   <title>Spect</title>
 
@@ -521,15 +521,15 @@ if (!navigator.clipboard){
   <meta property="og:type" content="website">
   <meta property="og:title" content="Imagine a place that hasn't changed in a very long time ...">
   <meta property="og:description" content="Add your perspective to the map!">
-  <meta property="og:image" content="./spect_og_image.png">
+  <meta property="og:image" content="https://i.imgur.com/qSBYoTH.png">
   
   <!-- Twitter Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
   <meta property="twitter:domain" content="spect.netlify.app">
   <meta property="twitter:url" content="https://spect.netlify.app">
   <meta name="twitter:title" content="Imagine a place that hasn't changed in a very long time ...">
-  <meta name="twitter:description" content="dd your perspective to the map!">
-  <meta name="twitter:image" content="./spect_og_image.png">
+  <meta name="twitter:description" content="Add your perspective to the map!">
+  <meta name="twitter:image" content="https://i.imgur.com/qSBYoTH.png">
   {/if}
 </svelte:head>
 
