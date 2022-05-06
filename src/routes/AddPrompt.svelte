@@ -1,6 +1,7 @@
 <script>
     import { points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store, route_store } from '$lib/stores';
     import { createEventDispatcher } from 'svelte';
+    import { goto } from '$app/navigation';
 
     const dispatch = createEventDispatcher();
 
