@@ -365,7 +365,7 @@ function copyPromptLink() {
 
 // let updated_params = encodeURI(params);
 
-let url = window.location.origin + "?" + $current_prompt_store.id;
+let url = window.location.origin + "?prompt=" + $current_prompt_store.id;
 
 if (!navigator.clipboard){
           // use old commandExec() way
@@ -434,9 +434,15 @@ if (!navigator.clipboard){
 
         let current_prompt;
 
+        console.log(url.search);
+
         if (url.search) {
+
+          let str = new URLSearchParams(url.search);
+          let urlparams = Object.fromEntries(str.entries());
+          console.log(urlparams);
           
-          current_prompt = prompts.table.find(prompt => prompt.id == url.search.slice(1));
+          current_prompt = prompts.table.find(prompt => prompt.id == urlparams.prompt);
 
         }
 

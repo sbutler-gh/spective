@@ -29,6 +29,12 @@
 
     $current_prompt_store = response_json[0];
 
+    let updated_url = window.location.origin + "?prompt=" + $current_prompt_store.id;
+
+    // $page.url = updated_url;
+
+    goto(updated_url);
+
     // We use an event dispatcher to bubble up the update prompt function to index.svelte
 
     dispatch('updateprompt', {

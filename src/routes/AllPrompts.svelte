@@ -14,7 +14,7 @@ const dispatch = createEventDispatcher();
 
         console.log($current_prompt_store.content);
 
-        let updated_url = window.location.origin + "?" + e.target.id;
+        let updated_url = window.location.origin + "?prompt=" + e.target.id;
 
         // $page.url = updated_url;
 
