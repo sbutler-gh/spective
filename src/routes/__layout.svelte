@@ -17,6 +17,7 @@ import IntroModal from './IntroModal.svelte';
 
   export let original;
   export let prompt;
+  export let coordinates;
 
   const { GeolocateControl, NavigationControl } = controls
   const place = null;
@@ -48,49 +49,81 @@ import IntroModal from './IntroModal.svelte';
 
   export let points;
 
-  let center;
+  // let center;
 
 
     // On page load
     onMount(async() => {
+  
+      // We geolocate the user's IP address, to initialize the map settings near where they are and center the map on a familiar place.
+       ipToCoordinates();
 
-  // We geolocate the user's IP address, to initialize the map settings near where they are and center the map on a familiar place.
-    ipToCoordinates()
-    .then(async() => {
-      updatePointsForNewPrompt();
-            // fetchPrompts()
-            // .then(async() => {
-            //   updatePointsForNewPrompt();
-            // })
-    })
+      fetchPoints()
+      .then(() => {
+        updatePointsForNewPrompt();
+      })
+
     })
 
-   // We take the user's IP, get coordinates from it (an approximate location — usually the data center nearest them), and update the map location to those coordinates.
-   async function ipToCoordinates() {
-    
-    const ip = await fetch("https://serene-journey-42564.herokuapp.com/https://api.ipify.org?format=json&callback=getIP");
-    
-    const ip_json = await ip.json();
-    console.log(ip_json);
-    
-    const request = await fetch(`https://serene-journey-42564.herokuapp.com/ipinfo.io/${ip_json["ip"]}/geo?token=${variables.ipInfo}`, {
-        method: 'GET',
-        "Content-Type": "application/json",
-        "charset": "utf-8",
-        "Access-Control-Allow-Headers": "X-Requested-With",
-        "X-Requested-With": "XMLHttpRequest"   
+async function ipToCoordinates() {
+          // We take the user's IP, get coordinates from it (an approximate location — usually the data center nearest them), and update the map location to those coordinates.
+          const ip = await fetch("https://serene-journey-42564.herokuapp.com/https://api.ipify.org?format=json&callback=getIP");
+          
+          const ip_json = await ip.json();
+          console.log(ip_json);
+          
+          const request = await fetch(`https://serene-journey-42564.herokuapp.com/ipinfo.io/${ip_json["ip"]}/geo?token=${variables.ipInfo}`, {
+              method: 'GET',
+              "Content-Type": "application/json",
+              "charset": "utf-8",
+              "Access-Control-Allow-Headers": "X-Requested-With",
+              "X-Requested-With": "XMLHttpRequest"   
+          });
+
+          const json = await request.json()
+          
+          console.log(json);
+          
+          let coordinates = json.loc.split(',');
+          coordinates = {"lat": coordinates[0], "lng": coordinates[1]};
+          center = coordinates;
+          $map_center_store = center;
+}
+
+async function fetchPoints() {
+
+      // We get the data via the fetch_points endpoint
+    const res = await fetch('/fetch_points',{
+      method: 'get'
     });
 
-    const json = await request.json()
-    
-    console.log(json);
-    
-    let coordinates = json.loc.split(',');
-    coordinates = {"lat": coordinates[0], "lng": coordinates[1]};
-    center = coordinates;
-    $map_center_store = center;
+		if (res.ok) {
+      console.log('okay');
+      
+			const points = await res.json();
 
+      let points_array = [];
+
+      // For each item of data from the backend
+      for (var i=0; i < points.table.length; i++) {
+
+        // We convert it into geojson feature format
+        let new_point =  { "type": "Feature", "properties": { "id": points.table[i].id, "content": points.table[i].content, "prompt_id": points.table[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points.table[i].lng, points.table[i].lat, 0.0 ] } }
+
+        // And push it to the array
+        points_array.push(new_point);
+      }
+
+      // And we set the inputs_store to the inputs_array, filled with data from the backend
+      points_store.set(points.table);
     }
+    else {
+      let response_json = await res.json();
+      console.log(response_json);
+      console.log(response_json.status);
+      console.log(response.body);
+    }
+}
 
 async function fetchPrompts() {
 
@@ -402,32 +435,9 @@ if (!navigator.clipboard){
 
   let original = true;
 
+  // ipToCoordinates();
+
   export const load = async ({ fetch, url }) => {
-
-    // We get the data via the fetch_points endpoint
-    const res = await fetch('/fetch_points',{
-      method: 'get'
-    });
-
-		if (res.ok) {
-      console.log('okay');
-      
-			const points = await res.json();
-
-      let points_array = [];
-
-      // For each item of data from the backend
-      for (var i=0; i < points.table.length; i++) {
-
-        // We convert it into geojson feature format
-        let new_point =  { "type": "Feature", "properties": { "id": points.table[i].id, "content": points.table[i].content, "prompt_id": points.table[i].prompt_id }, "geometry": { "type": "Point", "coordinates": [ points.table[i].lng, points.table[i].lat, 0.0 ] } }
-
-        // And push it to the array
-        points_array.push(new_point);
-      }
-
-      // And we set the inputs_store to the inputs_array, filled with data from the backend
-      points_store.set(points.table);
 
       const response = await fetch('/fetch_prompts',{
       method: 'get'
@@ -460,15 +470,8 @@ if (!navigator.clipboard){
 
         current_prompt_store.set(current_prompt);
 
-        // $current_prompt_store = $prompts_store[0];
-
-      }
-
-      // points_prompt_store.set(points_array);
-
 			return {
 				props: { 
-          points: points.table,
           prompt: get(current_prompt_store),
           original: original
         }
@@ -476,10 +479,10 @@ if (!navigator.clipboard){
 		}
 
     else {
-      console.log(res);
+      console.log(response);
     }
 
-		const { message } = await res.json();
+		const { message } = await response.json();
 
 		return {
 			error: new Error(message)
@@ -659,6 +662,10 @@ if (!navigator.clipboard){
     <dd>zoom: {zoom}</dd>
   {/if} -->
 </div>
+{:else}
+<p style="position: absolute; top: 50%; left: 50%; display: block; margin: auto; text-align: center; -webkit-transform: translateX(-50%);
+-moz-transform: translateX(-50%);
+transform: translateX(-50%);">Loading map and data ...</p>
 {/if}
 
 
