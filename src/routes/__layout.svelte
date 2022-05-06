@@ -19,6 +19,8 @@ import IntroModal from './IntroModal.svelte';
 
   let content;
 
+  let submit_message;
+
   let copy_tooltip = false;
 
   let display_intro_modal = true;
@@ -321,17 +323,19 @@ let response_json = await response.json();
   // That way, when <Content> is called again, the map data will be redrawn with the updated data.
   unique = {};
 
-  // After all this, we update create_mode to success to display a success message.
-  create_mode = "success";
+  // After all this, we change create_mode to false
+  create_mode = false;
+  // And display a success message.
+  submit_message = "success";
 
   // And we return the map to its default settings, including setting the cursor to grab
   document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
   // And resetting selected_location (so the next time user wants to add content, it won't automatically select the same point from this submission)
   selected_location = null;
 
-  // And after several seconds, enough time for the user to see the success message, we'll reset create_mode to false, as the content has been added and the workflow is complete.
+  // And after several seconds, enough time for the user to see the success message, we'll reset the submit_message, as the content has been added and the workflow is complete.
   setTimeout(function() {
-    create_mode = false;
+    submit_message = "";
   }, 3000)
 }
 
@@ -341,12 +345,13 @@ console.log(response_json);
 console.log(response_json.status);
 console.log(response.body);
 
-create_mode = "error";
+create_mode = false;
+submit_message = "error";
 
 document.getElementsByClassName('mapboxgl-canvas-container')[0].style = "cursor: grab";
 
 setTimeout(function() {
-    create_mode = false;
+    submit_message = "";
   }, 10000)
 }
 
@@ -532,9 +537,14 @@ if (!navigator.clipboard){
       <button style="margin-left: auto; display: block;" disabled=disabled>Submit</button>
       {/if}
     </form>
-    {:else if create_mode == "success"}
+    {/if}
+  </div>
+  {/if}
+  {#if submit_message}
+  <div style="position: absolute; z-index: 100; top: 5; width: 100%; background: white; color: black; text-align: center;">
+    {#if submit_message == "success"}
     <h4 style="color:darkgreen">Success!</h4>
-    {:else if create_mode == "error"}
+    {:else if submit_message == "error"}
     <h4 style="color:darkred">Problem submitting, please try again or contact spect@sambutler.us</h4>
     {/if}
   </div>
