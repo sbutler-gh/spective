@@ -1,6 +1,8 @@
 <script>
     import { points_prompt_store, points_store, prompts_store, current_prompt_store, route_store } from '$lib/stores';
     import { createEventDispatcher } from 'svelte';
+    import {page} from '$app/stores'
+import { goto } from '$app/navigation';
 
 const dispatch = createEventDispatcher();
 
@@ -11,6 +13,12 @@ const dispatch = createEventDispatcher();
         $current_prompt_store = $prompts_store.find(prompt => prompt.id == e.target.id);
 
         console.log($current_prompt_store.content);
+
+        let updated_url = window.location.origin + "?" + e.target.id;
+
+        // $page.url = updated_url;
+
+        goto(updated_url);
 
             dispatch('updateprompt', {
 			// name: campaign_name,
