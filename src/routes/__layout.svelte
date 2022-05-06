@@ -14,6 +14,10 @@ import IntroModal from './IntroModal.svelte';
 
   // let prompt = "Imagine a place in your community.  A place that hasn't changed in a very long time.  You're going there to take a picture.  Once you arrive, you drop your camera — you reach down for it, and when you stand back up, you are 50 years in the future.  What do you see?  How has this place changed?"
 
+
+  export let original;
+  export let prompt;
+
   const { GeolocateControl, NavigationControl } = controls
   const place = null;
 
@@ -396,6 +400,8 @@ if (!navigator.clipboard){
 <!-- The very first thing we do is load data from the backend, so we can populate the map with it -->
 <script context="module">
 
+  let original = true;
+
   export const load = async ({ fetch, url }) => {
 
     // We get the data via the fetch_points endpoint
@@ -438,6 +444,8 @@ if (!navigator.clipboard){
 
         if (url.search) {
 
+          original = false;
+
           let str = new URLSearchParams(url.search);
           let urlparams = Object.fromEntries(str.entries());
           console.log(urlparams);
@@ -460,7 +468,9 @@ if (!navigator.clipboard){
 
 			return {
 				props: { 
-          points: points.table
+          points: points.table,
+          prompt: get(current_prompt_store),
+          original: original
         }
 			};
 		}
@@ -477,6 +487,51 @@ if (!navigator.clipboard){
 	};
   
 </script>
+
+<svelte:head>
+
+  {#if !original}
+  <title>Spect</title>
+
+  
+  <meta name="description" content="Add your perspective to the map">
+  
+  <!-- Facebook Meta Tags -->
+  <meta property="og:url" content="https://spect.netlify.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{prompt?.content}">
+  <meta property="og:description" content="Add your response to the map!">
+  <meta property="og:image" content="./spect_og_image.png">
+  
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="twitter:domain" content="spect.netliy.app">
+  <meta property="twitter:url" content="https://spect.netlify.app">
+  <meta property="og:title" content="{prompt?.content}">
+  <meta property="og:description" content="Add your response to the map!">
+  <meta name="twitter:image" content="./spect_og_image.png">
+  {:else}
+  <title>Spect</title>
+
+  
+  <meta name="description" content="Add your perspective to the map">
+  
+  <!-- Facebook Meta Tags -->
+  <meta property="og:url" content="https://spect.netlify.app">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Imagine a place that hasn't changed in a very long time ...">
+  <meta property="og:description" content="Add your perspective to the map!">
+  <meta property="og:image" content="./spect_og_image.png">
+  
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="twitter:domain" content="spect.netlify.app">
+  <meta property="twitter:url" content="https://spect.netlify.app">
+  <meta name="twitter:title" content="Imagine a place that hasn't changed in a very long time ...">
+  <meta name="twitter:description" content="dd your perspective to the map!">
+  <meta name="twitter:image" content="./spect_og_image.png">
+  {/if}
+</svelte:head>
 
 {#if center?.lng}
 
