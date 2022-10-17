@@ -21,7 +21,9 @@ import IntroModal from './IntroModal.svelte';
   export let prompt;
   export let coordinates;
 
-  const { GeolocateControl, NavigationControl } = controls
+//   const { GeolocateControl, NavigationControl } = controls
+  const { NavigationControl } = controls
+
   const place = null;
 
   let content;
