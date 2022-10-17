@@ -2,6 +2,8 @@
   import "../app.css";
   import { mapboxToken } from '$lib/conf.js'
   import { Map, Geocoder, Marker, controls } from '$lib/components.js'
+import GeolocateControl from '$lib/map/controls/GeolocateControl.svelte'
+
   import Content from './Content.svelte';
 import { user_store, points_prompt_store, points_store, prompts_store, current_prompt_store, map_center_store, route_store } from '$lib/stores';
 import {afterUpdate, getContext, onMount, setContext} from 'svelte';
@@ -640,7 +642,7 @@ if (!navigator.clipboard){
     {/key} -->
 
       <!-- <NavigationControl /> -->
-      <!-- <GeolocateControl on:geolocate={e => console.log('geolocated', e.detail)} /> -->
+      <GeolocateControl on:geolocate={e => console.log('geolocated', e.detail)} />
       <!-- <Marker lat={marker.lat} lng={marker.lng} /> -->
       {#if create_mode != "success"}
       <button id="add_content_button" style="position: absolute; bottom: 42%; margin: auto; left: 0; display: block; left: 50%;
